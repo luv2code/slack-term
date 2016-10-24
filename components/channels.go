@@ -229,24 +229,20 @@ func (c *Channels) ClearNewMessageIndicator() {
 func (c *Channels) FilterChannels(key rune) {
 	var filtered []string
 
-	for _, v := range c.List.Items {
-		if strings.ContainsRune(v, key) {
-			filtered = append(filtered, v)
+	for k, _ := range c.fullChannelList {
+		if strings.HasPrefix(k, string(key)) {
+			filtered = append(filtered, fmt.Sprintf("  %s", k))
 		}
 	}
+	sort.Strings(filtered)
 	c.List.Items = filtered
 }
 
 func (c *Channels) ResetChannelFilter() {
-	keys := getKeys(c.fullChannelList)
+	var keys []string
+	for k, _ := range c.fullChannelList {
+		keys = append(keys, fmt.Sprintf("  %s", k))
+	}
 	sort.Strings(keys)
 	c.List.Items = keys
-}
-
-func getKeys(m map[string]int) (ret []string) {
-	ret = make([]string, 0, len(m))
-	for k := range m {
-		ret = append(ret, k)
-	}
-	return ret
 }
