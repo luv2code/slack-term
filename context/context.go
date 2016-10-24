@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	CommandMode = "command"
-	InsertMode  = "insert"
+	CommandMode       = "command"
+	InsertMode        = "insert"
+	ChannelSearchMode = "channel"
 )
 
 type AppContext struct {

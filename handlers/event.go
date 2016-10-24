@@ -21,59 +21,79 @@ func anyKeyHandler(ctx *context.AppContext) {
 			ev := termbox.PollEvent()
 
 			if ev.Type == termbox.EventKey {
-				if ctx.Mode == context.CommandMode {
-					switch ev.Key {
-					case termbox.KeyPgup:
-						actionScrollUpChat(ctx)
-					case termbox.KeyCtrlB:
-						actionScrollUpChat(ctx)
-					case termbox.KeyCtrlU:
-						actionScrollUpChat(ctx)
-					case termbox.KeyPgdn:
-						actionScrollDownChat(ctx)
-					case termbox.KeyCtrlF:
-						actionScrollDownChat(ctx)
-					case termbox.KeyCtrlD:
-						actionScrollDownChat(ctx)
-					default:
-						switch ev.Ch {
-						case 'q':
-							actionQuit()
-						case 'j':
-							actionMoveCursorDownChannels(ctx)
-						case 'k':
-							actionMoveCursorUpChannels(ctx)
-						case 'g':
-							actionMoveCursorTopChannels(ctx)
-						case 'G':
-							actionMoveCursorBottomChannels(ctx)
-						case 'i':
-							actionInsertMode(ctx)
-						}
-					}
-				} else if ctx.Mode == context.InsertMode {
-					switch ev.Key {
-					case termbox.KeyEsc:
-						actionCommandMode(ctx)
-					case termbox.KeyEnter:
-						actionSend(ctx)
-					case termbox.KeySpace:
-						actionInput(ctx.View, ' ')
-					case termbox.KeyBackspace, termbox.KeyBackspace2:
-						actionBackSpace(ctx.View)
-					case termbox.KeyDelete:
-						actionDelete(ctx.View)
-					case termbox.KeyArrowRight:
-						actionMoveCursorRight(ctx.View)
-					case termbox.KeyArrowLeft:
-						actionMoveCursorLeft(ctx.View)
-					default:
-						actionInput(ctx.View, ev.Ch)
-					}
+				switch ctx.Mode {
+				case context.CommandMode:
+					handleCommandMode(ev, ctx)
+				case context.InsertMode:
+					handleInsertMode(ev, ctx)
+				case context.ChannelSearchMode:
+					handleChannelSearchMode(ev, ctx)
 				}
 			}
 		}
 	}()
+}
+
+func handleCommandMode(ev termbox.Event, ctx *context.AppContext) {
+	switch ev.Key {
+	case termbox.KeyPgup:
+		actionScrollUpChat(ctx)
+	case termbox.KeyCtrlB:
+		actionScrollUpChat(ctx)
+	case termbox.KeyCtrlU:
+		actionScrollUpChat(ctx)
+	case termbox.KeyPgdn:
+		actionScrollDownChat(ctx)
+	case termbox.KeyCtrlF:
+		actionScrollDownChat(ctx)
+	case termbox.KeyCtrlD:
+		actionScrollDownChat(ctx)
+	default:
+		switch ev.Ch {
+		case 'q':
+			actionQuit()
+		case 'j':
+			actionMoveCursorDownChannels(ctx)
+		case 'k':
+			actionMoveCursorUpChannels(ctx)
+		case 'g':
+			actionMoveCursorTopChannels(ctx)
+		case 'G':
+			actionMoveCursorBottomChannels(ctx)
+		case 'i':
+			actionInsertMode(ctx)
+		case '/':
+			actionChannelSearchMode(ctx)
+		}
+	}
+}
+
+func handleInsertMode(ev termbox.Event, ctx *context.AppContext) {
+	switch ev.Key {
+	case termbox.KeyEsc:
+		actionCommandMode(ctx)
+	case termbox.KeyEnter:
+		actionSend(ctx)
+	case termbox.KeySpace:
+		actionInput(ctx.View, ' ')
+	case termbox.KeyBackspace, termbox.KeyBackspace2:
+		actionBackSpace(ctx.View)
+	case termbox.KeyDelete:
+		actionDelete(ctx.View)
+	case termbox.KeyArrowRight:
+		actionMoveCursorRight(ctx.View)
+	case termbox.KeyArrowLeft:
+		actionMoveCursorLeft(ctx.View)
+	default:
+		actionInput(ctx.View, ev.Ch)
+	}
+}
+
+func handleChannelSearchMode(ev termbox.Event, ctx *context.AppContext) {
+	switch ev.Key {
+	case termbox.KeyEsc:
+		actionCommandMode(ctx)
+	}
 }
 
 func resizeHandler(ctx *context.AppContext) func(termui.Event) {
@@ -185,6 +205,12 @@ func actionInsertMode(ctx *context.AppContext) {
 func actionCommandMode(ctx *context.AppContext) {
 	ctx.Mode = context.CommandMode
 	ctx.View.Mode.Par.Text = "NORMAL"
+	termui.Render(ctx.View.Mode)
+}
+
+func actionChannelSearchMode(ctx *context.AppContext) {
+	ctx.Mode = context.ChannelSearchMode
+	ctx.View.Mode.Par.Text = "CHANNEL SEARCH"
 	termui.Render(ctx.View.Mode)
 }
 
