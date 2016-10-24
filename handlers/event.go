@@ -91,8 +91,12 @@ func handleInsertMode(ev termbox.Event, ctx *context.AppContext) {
 
 func handleChannelSearchMode(ev termbox.Event, ctx *context.AppContext) {
 	switch ev.Key {
-	case termbox.KeyEsc:
+	case termbox.KeyEnter:
 		actionCommandMode(ctx)
+	case termbox.KeyEsc:
+		actionResetChannelFilter(ctx)
+	default:
+		actionFilterChannel(ctx, ev.Ch)
 	}
 }
 
@@ -280,4 +284,15 @@ func actionScrollUpChat(ctx *context.AppContext) {
 func actionScrollDownChat(ctx *context.AppContext) {
 	ctx.View.Chat.ScrollDown()
 	termui.Render(ctx.View.Chat)
+}
+
+func actionFilterChannel(ctx *context.AppContext, key rune) {
+	ctx.View.Channels.FilterChannels(key)
+	termui.Render(ctx.View.Channels)
+}
+
+func actionResetChannelFilter(ctx *context.AppContext) {
+	ctx.View.Channels.ResetChannelFilter()
+	termui.Render(ctx.View.Channels)
+	actionCommandMode(ctx)
 }

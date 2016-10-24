@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gizak/termui"
@@ -15,12 +16,14 @@ type Channels struct {
 	SelectedChannel int // index of which channel is selected from the List
 	Offset          int // from what offset are channels rendered
 	CursorPosition  int // the y position of the 'cursor'
+	fullChannelList map[string]int
 }
 
 // CreateChannels is the constructor for the Channels component
 func CreateChannels(svc *service.SlackService, inputHeight int) *Channels {
 	channels := &Channels{
-		List: termui.NewList(),
+		List:            termui.NewList(),
+		fullChannelList: make(map[string]int, 0),
 	}
 
 	channels.List.BorderLabel = "Channels"
@@ -114,8 +117,10 @@ func (c *Channels) SetY(y int) {
 
 // GetChannels will get all available channels from the SlackService
 func (c *Channels) GetChannels(svc *service.SlackService) {
-	for _, slackChan := range svc.GetChannels() {
-		c.List.Items = append(c.List.Items, fmt.Sprintf("  %s", slackChan.Name))
+	for idx, slackChan := range svc.GetChannels() {
+		name := slackChan.Name
+		c.List.Items = append(c.List.Items, fmt.Sprintf("  %s", name))
+		c.fullChannelList[name] = idx
 	}
 }
 
@@ -219,4 +224,29 @@ func (c *Channels) ClearNewMessageIndicator() {
 	} else {
 		c.List.Items[c.SelectedChannel] = channelName[0]
 	}
+}
+
+func (c *Channels) FilterChannels(key rune) {
+	var filtered []string
+
+	for _, v := range c.List.Items {
+		if strings.ContainsRune(v, key) {
+			filtered = append(filtered, v)
+		}
+	}
+	c.List.Items = filtered
+}
+
+func (c *Channels) ResetChannelFilter() {
+	keys := getKeys(c.fullChannelList)
+	sort.Strings(keys)
+	c.List.Items = keys
+}
+
+func getKeys(m map[string]int) (ret []string) {
+	ret = make([]string, 0, len(m))
+	for k := range m {
+		ret = append(ret, k)
+	}
+	return ret
 }
